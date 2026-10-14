@@ -7,8 +7,8 @@ const MAX_SUGGESTIONS = 10;
 
 function formatTitle(piece) {
   const opus = typeof piece.opus === "number" ? `Op. ${piece.opus}` : piece.opus;
-  const number = piece.number != null ? `, No. ${piece.number}` : "";
-  return `${piece.type}, ${opus}${number}`;
+  const number = piece.number != null ? ` No. ${piece.number}` : "";
+  return `${piece.type} ${opus}${number} in ${formatKey(piece)}`;
 }
 
 function formatKey(piece) {
@@ -64,6 +64,26 @@ function getSuggestions(query) {
     .map((r) => r.piece);
 }
 
+//Assigns a status for each portion of a guess to determine its color
+function status(isMatch, isPartial = false) {
+  if (isMatch) return "green";
+  if (isPartial) return "yellow";
+  return "gray";
+}
+
+// A guess is correct when every component would be green. Number and
+// accidental are compared too, since a guess without them hides those parts.
+function isCorrectGuess(guess, answer) {
+  return (
+    guess.type === answer.type &&
+    guess.opus === answer.opus &&
+    guess.number === answer.number &&
+    guess.key === answer.key &&
+    guess.accidental === answer.accidental &&
+    guess.modality === answer.modality
+  );
+}
+
 export default function RunGame() {
   const [guesses, setGuesses] = useState([]); // array of piece objects
   const [currentGuess, setCurrentGuess] = useState(null); // one piece object, or null
@@ -83,6 +103,9 @@ export default function RunGame() {
       ),
     [query]
   );
+
+  // The card is revealed once any guess has every component green
+  const solved = piece != null && guesses.some((g) => isCorrectGuess(g, piece));
 
   function choose(chosen) {
     setCurrentGuess(chosen);
@@ -114,26 +137,50 @@ export default function RunGame() {
 
   return (
     <div className="game">
-      <h1>Chopindle</h1>
+        <h1>Chopindle</h1>
+      
+      {/*Contains a how to play button that displays a pop up with rules*/}
+        <div className="rules">
+            <button
+                className="how-to-play-button"
+                onClick={() => {
+                    alert("How to Play:\n\n1. Click 'Get Random Piece' to start a new game.\n2. Type the name of any Chopin piece in the input box.\n3. Use the arrow keys to navigate suggestions and press Enter to select.\n4. Click 'Enter' to submit your guess.\n5. The colors indicate how close your guess is to the correct answer:\n   - Green: Correct\n   - Yellow: Close (e.g., within 10 opus numbers or one letter off in key)\n   - Gray: Incorrect\n6. Keep guessing until you find the correct piece!\n7. You can clear your guesses at any time by clicking 'Clear Guesses'.\n\nGood luck!");
+                }}
+            >
+                How to Play
+            </button>
+        </div>
+        
+        {/*Search bar for guessing pieces*/}
+        <div className="search">
+            <div className="search-row">
+                <input
+                    type="text"
+                    placeholder="Type any Chopin piece"
+                    value={query}
+                    onChange={(e) => {
+                        setQuery(e.target.value);
+                        setHighlighted(0);
+                        setOpen(true);
+                    }}
+                    onFocus={() => setOpen(true)}
+                    onBlur={() => setOpen(false)}
+                    onKeyDown={onKeyDown}
+                    role="combobox"
+                    aria-expanded={showDropdown}
+                    aria-controls="piece-suggestions"
+                    aria-autocomplete="list"
+                />
+                {/* Disable the button if there's no typed piece or if the answer piece hasn't been set yet */}
+                <button
+                className="enter-button"
+                onClick={() => choose(typedPiece)}
+                disabled={!typedPiece || !piece} 
+                >
+                    Enter
+                </button>
+            </div>
 
-      <div className="search">
-        <input
-          type="text"
-          placeholder="Type any Chopin piece"
-          value={query}
-          onChange={(e) => {
-            setQuery(e.target.value);
-            setHighlighted(0);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          onBlur={() => setOpen(false)}
-          onKeyDown={onKeyDown}
-          role="combobox"
-          aria-expanded={showDropdown}
-          aria-controls="piece-suggestions"
-          aria-autocomplete="list"
-        />
         {showDropdown && (
           <ul id="piece-suggestions" className="suggestions" role="listbox">
             {suggestions.length === 0 && <li className="no-results">No matching pieces</li>}
@@ -150,34 +197,81 @@ export default function RunGame() {
                 }}
                 onMouseEnter={() => setHighlighted(i)}
               >
-                <span>{formatTitle(s)}</span>
-                <span className="suggestion-key">{formatKey(s)}</span>
+                {formatTitle(s)}
               </li>
             ))}
           </ul>
         )}
+      </div>
+
+      <div className="button-row">
         <button
-          className="enter-button"
-          onClick={() => choose(typedPiece)}
-          disabled={!typedPiece}
+          className="random-button"
+          onClick={() => {
+            const random = getRandomPiece();
+            setPiece(random);
+            setQuery("");
+            setOpen(false);
+          }}
         >
-          Enter
+          Get Random Piece
+        </button>
+        <button
+          className="random-button"
+          onClick={() => {
+            setGuesses([]);
+            setCurrentGuess(null);
+          }}
+          disabled={guesses.length === 0}
+        >
+          Clear Guesses
         </button>
       </div>
 
-      <button
-        className="random-button"
-        onClick={() => {
-          const random = getRandomPiece();
-          setPiece(random);
-          setQuery("");
-          setOpen(false);
-        }}
-      >
-        Get Random Piece
-      </button>
+    {/* Displays the guesses*/}
+    <div className="guesses">
+        {guesses.length > 0 && (
+            <div>
+                <ul>
+                    {guesses.map((g, i) => (
+                        <li className ={"guess"} key={i}>
+                            {/*Green if correct, gray if wrong*/}
+                            <span className={`guessComponent ${status(g.type === piece.type)}`}>{g.type}</span>
+                            {/*Green if correct, yellow if within 10 opus numbers, gray if wrong*/}
+                            <span className={`guessComponent ${status(g.opus === piece.opus, (typeof g.opus === "number" && typeof piece.opus === "number" && Math.abs(g.opus - piece.opus) <= 10))}`}>
+                                {typeof g.opus === "number" ? `Op. ${g.opus}` : g.opus}
+                            </span>
+                            {/*Green if correct, yellow if a number is present but wrong, gray if wrong*/}
+                            {g.number != null && (
+                                <span className={`guessComponent ${status(g.number === piece.number, g.number && piece.number)}`}>
+                                    No. {g.number}
+                                </span>
+                            )}
+                            <span>in</span>
+                            {/*Green if correct, yellow if within one letter of the correct key, gray if wrong*/}
+                            <span className={`guessComponent ${status(g.key === piece.key, (Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 1 || Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 6))}`}>
+                                {g.key}
+                            </span>
+                            {/*Green if correct, yellow if an accidental is present but wrong, gray if wrong*/}
+                            {g.accidental != null && (
+                                <span className={`guessComponent ${status(g.accidental === piece.accidental, g.accidental && piece.accidental)}`}>
+                                    {accidentalSymbols[g.accidental]}
+                                </span>
+                            )}
+                            {/*Green if correct, gray if wrong*/}
+                            <span className={`guessComponent ${status(g.modality === piece.modality)}`}>
+                                {g.modality}
+                            </span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        )}
+    </div>
 
-      {piece && (
+
+
+      {solved && (
         <div className="piece-card">
           <h2>{formatTitle(piece)}</h2>
           <dl>
@@ -186,9 +280,13 @@ export default function RunGame() {
             <dt>Opus</dt>
             <dd>{piece.opus}</dd>
             <dt>Number</dt>
-            <dd>{piece.number ?? "—"}</dd>
+            <dd>{piece.number ?? ""}</dd>
             <dt>Key</dt>
-            <dd>{formatKey(piece)}</dd>
+            <dd>{piece.key}</dd>
+            <dt>Accidental</dt>
+            <dd>{piece.accidental ?? ""}</dd>
+            <dt>Modality</dt>
+            <dd>{piece.modality}</dd>
           </dl>
         </div>
       )}

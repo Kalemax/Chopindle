@@ -6,7 +6,7 @@
   padding: 32px 16px;
 }
 
-.random-button {
+.random-button, .enter-button {
   font: inherit;
   padding: 12px 24px;
   border-radius: 8px;
@@ -16,8 +16,19 @@
   cursor: pointer;
 }
 
-.random-button:hover {
+.random-button:hover, .enter-button:hover {
   border-color: var(--accent);
+}
+
+.search-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.search-row input {
+  flex: 1;
+  min-width: 0;
 }
 
 .piece-card {
@@ -102,5 +113,52 @@
 }
 
 .suggestions .no-results {
+  cursor: default;
+}
+
+/*Formats guesses*/
+.guesses ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.guess {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.guessComponent {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 70px;
+  padding: 10px 14px;
+  background: #d3d3d3;
+  color: #222;
+  border-radius: 4px;
+  font-weight: 600;
+  text-align: center;
+}
+
+/*Colors for guess components based on status*/
+.guessComponent.green { background: #6aaa64; color: white; }  /* green */
+.guessComponent.yellow { background: #c9b458; color: white; }  /* yellow */
+.guessComponent.gray  { background: #787c7e; color: white; }  /* gray */
+
+.button-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.random-button:disabled {
+  opacity: 0.5;
   cursor: default;
 }
