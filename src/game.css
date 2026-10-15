@@ -221,12 +221,11 @@
 .modal {
   position: relative;
   box-sizing: border-box;
-  /* Roughly square; grows taller only if the rules need more room */
-  width: min(520px, 100%);
-  min-height: min(500px, calc(100vh - 32px));
+  /* Compact enough to fit without scrolling */
+  width: min(480px, 100%);
   max-height: calc(100vh - 32px);
   overflow-y: auto;
-  padding: 32px 32px 24px;
+  padding: 22px 26px 18px;
   border-radius: 16px;
   background: var(--bg);
   border: 1px solid var(--border);
@@ -236,7 +235,7 @@
 }
 
 .modal h2 {
-  margin: 0 0 16px;
+  margin: 0 0 12px;
   text-align: center;
 }
 
@@ -265,43 +264,106 @@
 }
 
 .rules-steps {
-  margin: 0 0 16px;
-  padding-left: 22px;
-  font-size: 15px;
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.4;
 }
 
 .rules-steps li + li {
-  margin-top: 6px;
+  margin-top: 3px;
+}
+
+.rules-colors-title {
+  margin: 0 0 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--text);
 }
 
 .rules-colors {
   list-style: none;
-  margin: 0 0 16px;
-  padding: 12px 0 0;
-  border-top: 1px solid var(--border);
-  font-size: 15px;
-}
-
-.rules-colors li {
+  margin: 0 0 12px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 1.35;
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 5px;
 }
 
-.rules-colors li + li {
-  margin-top: 8px;
+/* One row per color: chip on the left, explanation on the right */
+.rules-colors > li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--code-bg);
 }
 
 .rules-swatch.guessComponent {
   flex: none;
-  min-width: 0;
-  width: 18px;
-  height: 18px;
-  padding: 0;
+  min-width: 56px;
+  padding: 2px 0;
   border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.rules-color-text {
+  flex: 1;
+  padding-top: 1px;
+  color: var(--text-h);
+}
+
+/* Yellow's cases in two columns to save height */
+.rules-color-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px 14px;
+  margin: 3px 0 0;
+  padding-left: 16px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+/* Example guess: mini versions of the guess tiles */
+.rules-example {
+  margin: 0 0 10px;
+}
+
+.rules-example-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.rules-tile.guessComponent {
+  min-width: 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.rules-example-word {
+  font-size: 12px;
+  padding: 0 2px;
+}
+
+.rules-example-note {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text);
 }
 
 .rules-footer {
+  margin: 0;
   text-align: center;
   font-weight: 600;
   color: var(--text-h);
