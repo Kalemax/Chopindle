@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
 import "./game.css";
 import { chopinPieces, getRandomPiece } from "./chopinPieces.js";
+import HowToPlay from "./HowToPlay.jsx";
 
 const accidentalSymbols = { b: "♭", "#": "♯" };
 const MAX_SUGGESTIONS = 10;
+const MAX_GUESSES = 6;
 
 function formatTitle(piece) {
   const opus = typeof piece.opus === "number" ? `Op. ${piece.opus}` : piece.opus;
@@ -71,6 +73,11 @@ function status(isMatch, isPartial = false) {
   return "gray";
 }
 
+// Pulls the video ID out of a "https://www.youtube.com/watch?v=ID" link
+function youtubeId(url) {
+  return new URL(url).searchParams.get("v");
+}
+
 // A guess is correct when every component would be green. Number and
 // accidental are compared too, since a guess without them hides those parts.
 function isCorrectGuess(guess, answer) {
@@ -87,7 +94,7 @@ function isCorrectGuess(guess, answer) {
 export default function RunGame() {
   const [guesses, setGuesses] = useState([]); // array of piece objects
   const [currentGuess, setCurrentGuess] = useState(null); // one piece object, or null
-  const [piece, setPiece] = useState(null); // the answer: one piece object, or null
+  const [piece, setPiece] = useState(() => getRandomPiece()); // the answer, picked when the page loads
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [highlighted, setHighlighted] = useState(0);
@@ -137,19 +144,11 @@ export default function RunGame() {
 
   return (
     <div className="game">
-        <h1>Chopindle</h1>
+        <h1 className="title">Chopindle</h1>
       
       {/*Contains a how to play button that displays a pop up with rules*/}
-        <div className="rules">
-            <button
-                className="how-to-play-button"
-                onClick={() => {
-                    alert("How to Play:\n\n1. Click 'Get Random Piece' to start a new game.\n2. Type the name of any Chopin piece in the input box.\n3. Use the arrow keys to navigate suggestions and press Enter to select.\n4. Click 'Enter' to submit your guess.\n5. The colors indicate how close your guess is to the correct answer:\n   - Green: Correct\n   - Yellow: Close (e.g., within 10 opus numbers or one letter off in key)\n   - Gray: Incorrect\n6. Keep guessing until you find the correct piece!\n7. You can clear your guesses at any time by clicking 'Clear Guesses'.\n\nGood luck!");
-                }}
-            >
-                How to Play
-            </button>
-        </div>
+      {/* Rules text lives in rules.js */}
+        <HowToPlay />
         
         {/*Search bar for guessing pieces*/}
         <div className="search">
@@ -204,92 +203,78 @@ export default function RunGame() {
         )}
       </div>
 
-      <div className="button-row">
-        <button
-          className="random-button"
-          onClick={() => {
-            const random = getRandomPiece();
-            setPiece(random);
-            setQuery("");
-            setOpen(false);
-          }}
-        >
-          Get Random Piece
-        </button>
-        <button
-          className="random-button"
-          onClick={() => {
-            setGuesses([]);
-            setCurrentGuess(null);
-          }}
-          disabled={guesses.length === 0}
-        >
-          Clear Guesses
-        </button>
-      </div>
+        {/* Displays the guesses*/}
+        <div className="guesses">
+            {guesses.length > 0 && (
+                <div>
+                    <ul>
+                        {guesses.map((g, i) => (
+                            <li className ={"guess"} key={i}>
+                                {/*Green if correct, gray if wrong*/}
+                                <span className={`guessComponent ${status(g.type === piece.type)}`}>{g.type}</span>
+                                {/*Green if correct, yellow if within 10 opus numbers, gray if wrong*/}
+                                <span className={`guessComponent ${status(g.opus === piece.opus, (typeof g.opus === "number" && typeof piece.opus === "number" && Math.abs(g.opus - piece.opus) <= 10))}`}>
+                                    {typeof g.opus === "number" ? `Op. ${g.opus}` : g.opus}
+                                </span>
+                                {/*Green if correct, yellow if a number is present but wrong, gray if wrong*/}
+                                {g.number != null && (
+                                    <span className={`guessComponent ${status(g.number === piece.number, g.number && piece.number)}`}>
+                                        No. {g.number}
+                                    </span>
+                                )}
+                                <span>in</span>
+                                {/*Green if correct, yellow if within one letter of the correct key, gray if wrong*/}
+                                <span className={`guessComponent ${status(g.key === piece.key, (Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 1 || Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 6))}`}>
+                                    {g.key}
+                                </span>
+                                {/*Green if correct, yellow if an accidental is present but wrong, gray if wrong*/}
+                                {g.accidental != null && (
+                                    <span className={`guessComponent ${status(g.accidental === piece.accidental, g.accidental && piece.accidental)}`}>
+                                        {accidentalSymbols[g.accidental]}
+                                    </span>
+                                )}
+                                {/*Green if correct, gray if wrong*/}
+                                <span className={`guessComponent ${status(g.modality === piece.modality)}`}>
+                                    {g.modality}
+                                </span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
+        </div>
 
-    {/* Displays the guesses*/}
-    <div className="guesses">
-        {guesses.length > 0 && (
-            <div>
-                <ul>
-                    {guesses.map((g, i) => (
-                        <li className ={"guess"} key={i}>
-                            {/*Green if correct, gray if wrong*/}
-                            <span className={`guessComponent ${status(g.type === piece.type)}`}>{g.type}</span>
-                            {/*Green if correct, yellow if within 10 opus numbers, gray if wrong*/}
-                            <span className={`guessComponent ${status(g.opus === piece.opus, (typeof g.opus === "number" && typeof piece.opus === "number" && Math.abs(g.opus - piece.opus) <= 10))}`}>
-                                {typeof g.opus === "number" ? `Op. ${g.opus}` : g.opus}
-                            </span>
-                            {/*Green if correct, yellow if a number is present but wrong, gray if wrong*/}
-                            {g.number != null && (
-                                <span className={`guessComponent ${status(g.number === piece.number, g.number && piece.number)}`}>
-                                    No. {g.number}
-                                </span>
-                            )}
-                            <span>in</span>
-                            {/*Green if correct, yellow if within one letter of the correct key, gray if wrong*/}
-                            <span className={`guessComponent ${status(g.key === piece.key, (Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 1 || Math.abs(g.key.charCodeAt(0) - piece.key.charCodeAt(0)) === 6))}`}>
-                                {g.key}
-                            </span>
-                            {/*Green if correct, yellow if an accidental is present but wrong, gray if wrong*/}
-                            {g.accidental != null && (
-                                <span className={`guessComponent ${status(g.accidental === piece.accidental, g.accidental && piece.accidental)}`}>
-                                    {accidentalSymbols[g.accidental]}
-                                </span>
-                            )}
-                            {/*Green if correct, gray if wrong*/}
-                            <span className={`guessComponent ${status(g.modality === piece.modality)}`}>
-                                {g.modality}
-                            </span>
-                        </li>
-                    ))}
-                </ul>
+
+
+        {solved && (
+            <div className="piece-card">
+                <h2 className="correct">Correct!</h2>
+                <h2 className="piece-title">{formatTitle(piece)}</h2>
+                {/* Embedded YouTube player so users can listen without leaving the tab */}
+                <div className="video-embed">
+                    <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${youtubeId(piece.youtube)}`}
+                        title={`${formatTitle(piece)} on YouTube`}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                    />
+                </div>
+                <button
+                    className="play-again-button"
+                    onClick={() => {
+                        const random = getRandomPiece();
+                        setPiece(random);
+                        setQuery("");
+                        setOpen(false);
+                        setGuesses([]);
+                        setCurrentGuess(null);
+                    }}
+                >
+                    Play again
+                </button>
             </div>
         )}
-    </div>
-
-
-
-      {solved && (
-        <div className="piece-card">
-          <h2>{formatTitle(piece)}</h2>
-          <dl>
-            <dt>Type</dt>
-            <dd>{piece.type}</dd>
-            <dt>Opus</dt>
-            <dd>{piece.opus}</dd>
-            <dt>Number</dt>
-            <dd>{piece.number ?? ""}</dd>
-            <dt>Key</dt>
-            <dd>{piece.key}</dd>
-            <dt>Accidental</dt>
-            <dd>{piece.accidental ?? ""}</dd>
-            <dt>Modality</dt>
-            <dd>{piece.modality}</dd>
-          </dl>
-        </div>
-      )}
     </div>
   );
 }

@@ -6,7 +6,15 @@
   padding: 32px 16px;
 }
 
-.random-button, .enter-button {
+.title {
+  font-family: "Playball", cursive;
+  font-weight: 500;
+  color: var(--text-h);
+  text-align: center;
+  margin: 2;
+}
+
+.play-again-button, .enter-button {
   font: inherit;
   padding: 12px 24px;
   border-radius: 8px;
@@ -16,7 +24,7 @@
   cursor: pointer;
 }
 
-.random-button:hover, .enter-button:hover {
+.play-again-button:hover, .enter-button:hover {
   border-color: var(--accent);
 }
 
@@ -158,7 +166,200 @@
   justify-content: center;
 }
 
-.random-button:disabled {
-  opacity: 0.5;
-  cursor: default;
+/* How to Play button (top left) */
+.how-to-play-button {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font: inherit;
+  font-size: 15px;
+  padding: 6px 14px 6px 6px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: border-color 0.15s, transform 0.15s;
+}
+
+.how-to-play-button:hover {
+  border-color: #787c7e; /* gray, same as the guess boxes */
+  transform: translateY(-1px);
+}
+
+.how-to-play-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: #787c7e;
+  color: white;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+/* Rules popup */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.45);
+  animation: fade-in 0.15s ease-out;
+}
+
+.modal {
+  position: relative;
+  box-sizing: border-box;
+  /* Roughly square; grows taller only if the rules need more room */
+  width: min(520px, 100%);
+  min-height: min(500px, calc(100vh - 32px));
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  padding: 32px 32px 24px;
+  border-radius: 16px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  text-align: left;
+  animation: pop-in 0.18s ease-out;
+}
+
+.modal h2 {
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+.modal-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 24px;
+  line-height: 1;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.modal-close:hover {
+  background: rgba(120, 124, 126, 0.18);
+  color: var(--text-h);
+}
+
+.rules-steps {
+  margin: 0 0 16px;
+  padding-left: 22px;
+  font-size: 15px;
+}
+
+.rules-steps li + li {
+  margin-top: 6px;
+}
+
+.rules-colors {
+  list-style: none;
+  margin: 0 0 16px;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--border);
+  font-size: 15px;
+}
+
+.rules-colors li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rules-colors li + li {
+  margin-top: 8px;
+}
+
+.rules-swatch.guessComponent {
+  flex: none;
+  min-width: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 4px;
+}
+
+.rules-footer {
+  text-align: center;
+  font-weight: 600;
+  color: var(--text-h);
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+}
+
+@keyframes pop-in {
+  from { opacity: 0; transform: scale(0.96); }
+}
+
+/* Solved card: make room for the video */
+.piece-card {
+  width: min(560px, 100%);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.piece-card h2 {
+  margin: 0;
+}
+
+/* Big, bold, green "Correct!" */
+.piece-card .correct {
+  font-size: 52px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #6aaa64; /* same green as the guess boxes */
+  text-shadow:
+    0 2px 0 #4e8a49,
+    0 6px 18px rgba(106, 170, 100, 0.45);
+  animation: correct-pop 0.5s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+@keyframes correct-pop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-6deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0); }
+}
+
+/* Responsive 16:9 YouTube player */
+.video-embed {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+.video-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
 }
