@@ -16,10 +16,10 @@
 
 .play-again-button, .enter-button {
   font: inherit;
-  padding: 12px 24px;
+  padding: 12px 48px;
   border-radius: 8px;
   border: 1px solid var(--accent-border);
-  background: var(--accent-bg);
+  background-color: var(--accent-bg);
   color: var(--text-h);
   cursor: pointer;
 }
