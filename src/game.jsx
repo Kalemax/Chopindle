@@ -6,6 +6,7 @@ import HowToPlay from "./HowToPlay.jsx";
 const accidentalSymbols = { b: "♭", "#": "♯" };
 const MAX_SUGGESTIONS = 10;
 const MAX_GUESSES = 6;
+const MAX_OPUS_DIFF = 10; // for yellow status
 
 function formatTitle(piece) {
   const opus = typeof piece.opus === "number" ? `Op. ${piece.opus}` : piece.opus;
@@ -93,7 +94,6 @@ function isCorrectGuess(guess, answer) {
 
 export default function RunGame() {
   const [guesses, setGuesses] = useState([]); // array of piece objects
-  const [currentGuess, setCurrentGuess] = useState(null); // one piece object, or null
   const [piece, setPiece] = useState(() => getRandomPiece()); // the answer, picked when the page loads
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
@@ -115,7 +115,6 @@ export default function RunGame() {
   const solved = piece != null && guesses.some((g) => isCorrectGuess(g, piece));
 
   function choose(chosen) {
-    setCurrentGuess(chosen);
     setGuesses((prev) => [...prev, chosen]);
     setQuery("");
     setOpen(false);
@@ -203,6 +202,10 @@ export default function RunGame() {
         )}
       </div>
 
+        <div className="guessCount">
+            <p> Guesses: {guesses.length} / {MAX_GUESSES}</p>
+        </div>
+
         {/* Displays the guesses*/}
         <div className="guesses">
             {guesses.length > 0 && (
@@ -213,7 +216,7 @@ export default function RunGame() {
                                 {/*Green if correct, gray if wrong*/}
                                 <span className={`guessComponent ${status(g.type === piece.type)}`}>{g.type}</span>
                                 {/*Green if correct, yellow if within 10 opus numbers, gray if wrong*/}
-                                <span className={`guessComponent ${status(g.opus === piece.opus, (typeof g.opus === "number" && typeof piece.opus === "number" && Math.abs(g.opus - piece.opus) <= 10))}`}>
+                                <span className={`guessComponent ${status(g.opus === piece.opus, (typeof g.opus === "number" && typeof piece.opus === "number" && Math.abs(g.opus - piece.opus) <= MAX_OPUS_DIFF))}`}>
                                     {typeof g.opus === "number" ? `Op. ${g.opus}` : g.opus}
                                 </span>
                                 {/*Green if correct, yellow if a number is present but wrong, gray if wrong*/}
@@ -268,7 +271,6 @@ export default function RunGame() {
                         setQuery("");
                         setOpen(false);
                         setGuesses([]);
-                        setCurrentGuess(null);
                     }}
                 >
                     Play again
